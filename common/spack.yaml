@@ -1,0 +1,96 @@
+# *** SUSE Common Software Stack ***
+spack:
+  config:
+    install_tree:
+      root: '%INSTALLROOT%'
+      projections:
+        c: '{name}/{version}/{hash:4}'
+        ^mpi: '{name}/{version}/{^mpi.name}/{^mpi.version}/{compiler.name}/{compiler.version}/{hash:4}'
+        ^c: '{name}/{version}/{compiler.name}/{compiler.version}/{hash:4}'
+        ^cxx: '{name}/{version}/{compiler.name}/{compiler.version}/{hash:4}'
+        ^fortran: '{name}/{version}/{compiler.name}/{compiler.version}/{hash:4}'
+        all: '{name}/{version}/{hash:4}'
+    build_jobs: 4
+    test_stage: '%TMPROOT%/$user/temp/spack/%DEPLOYMENT%/tests'
+    source_cache: '%TMPROOT%/$user/temp/spack/cache'
+    misc_cache: '%TMPROOT%/$user/temp/spack/%DEPLOYMENT%/misc'
+    build_stage:
+    - '%TMPROOT%/$user/temp/spack/%DEPLOYMENT%/builds'
+    shared_linking:
+    # Turning bind setting on would be beneficial but vendor compilers do not
+    # seem to work with it! Avoid!
+      type: rpath
+      bind: false
+  packages:
+    all:
+      permissions:
+        read: world
+        write: user
+      target:
+      # This target is lowest-common denominator between Intel and Milans
+      - x86_64_v3
+      prefer:
+      - +pic
+    aocc:
+      require:
+      - +license-agreed
+    c:
+      buildable: true
+    cxx:
+      buildable: true
+    fortran:
+      buildable: true
+    golang:
+      buildable: true
+    go-or-gccgo-bootstrap:
+      buildable: true
+    cmake:
+      variants:
+      - +ownlibs
+    cuda:
+      require:
+      - +allow-unsupported-compilers
+      variants:
+      - +dev
+    gcc:
+      prefer:
+      - spec: '%gcc@%SYSTEMGCC%'
+        when: '@:12'
+      - spec: '%gcc@12.5.0'
+        when: '@13:'
+      variants:
+      - +piclibs
+      - languages=c,c++,fortran,go
+    intel-oneapi-compilers:
+      variants:
+      - +nvidia
+    intel-oneapi-mkl:
+      require:
+      - spec: +gfortran threads=openmp
+        when: '%gcc'
+    libllvm:
+      conflict:
+      - llvm-amdgpu
+    linaro-forge:
+      require:
+      - +accept-eula
+    nvhpc:
+      require:
+      - +blas
+      - +lapack
+      - ~mpi
+    pkgconfig:
+      prefer:
+      - pkg-config
+    tbb:
+      prefer:
+      - intel-oneapi-tbb
+  view: false
+  concretizer:
+    unify: false
+    reuse: true
+    os_compatible:
+      opensuse15:
+      - sles15
+      sles15:
+      - opensuse15
